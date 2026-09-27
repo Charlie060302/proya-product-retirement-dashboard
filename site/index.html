@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="珀莱雅官旗即时零售商品汰换决策分析：从门店×SKU数据、同品类风险评分到候选清单与门店下钻的数据分析作品集。">
+  <title>珀莱雅官旗商品汰换决策分析｜数据分析作品集</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23131a2a'/%3E%3Cpath d='M7 23V17h4v6zm7 0V11h4v12zm7 0V7h4v16z' fill='%23ff6b61'/%3E%3C/svg%3E">
+  <style>
+    :root{--ink:#172033;--navy:#131a2a;--coral:#e8574f;--coral2:#ff786f;--muted:#646b78;--line:#e1e4ea;--paper:#f6f7f9;--white:#fff;--blue:#2f6dc2;--green:#18745a;--amber:#b97313}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;color:var(--ink);background:var(--paper);font-family:"Segoe UI","Microsoft YaHei",sans-serif;line-height:1.75;font-size:16px}
+    a{color:var(--coral);text-underline-offset:4px}a:focus-visible{outline:3px solid #f2b84b;outline-offset:5px}header,main,footer{max-width:1120px;margin:auto;padding-left:28px;padding-right:28px}
+    header{display:flex;justify-content:space-between;align-items:center;padding-top:24px;padding-bottom:24px;border-bottom:1px solid var(--line);gap:18px}.brand{font-weight:750;letter-spacing:.04em}.brand i{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--coral);margin-right:9px}nav{display:flex;gap:23px;flex-wrap:wrap;font-size:14px}nav a{color:var(--muted);text-decoration:none}nav a:hover{color:var(--coral)}
+    .hero{display:grid;grid-template-columns:1.45fr 1fr;gap:58px;padding:60px 0 46px;align-items:start}.eyebrow{font-size:13px;letter-spacing:.14em;color:var(--coral);font-weight:750;margin:0 0 13px}h1{font-size:clamp(34px,4.5vw,49px);line-height:1.2;letter-spacing:-.035em;margin:0 0 21px}h2{font-size:25px;line-height:1.35;margin:0 0 23px}h3{font-size:18px;line-height:1.45;margin:0 0 9px}.lead{color:var(--muted);margin:0 0 26px;max-width:700px}.button{display:inline-block;background:var(--coral);color:white;border-radius:7px;text-decoration:none;padding:12px 22px;font-weight:650}.button:hover{background:#d64942}.secondary{display:inline-block;margin-left:18px;font-size:14px}.role{font-size:14px;color:var(--muted);margin:18px 0 0}
+    .evidence{background:var(--navy);color:#fff;padding:27px;border-top:4px solid var(--coral2);box-shadow:0 15px 40px #1a223018}.evidence h2{font-size:16px;margin:0 0 15px}.evidence-row{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid #ffffff20;padding:9px 0;gap:15px}.evidence-row strong{font-size:30px;line-height:1.25;color:#ff857d;font-variant-numeric:tabular-nums}.evidence-row span{font-size:14px;color:#eef1f7}.note{font-size:13px;line-height:1.7;color:var(--muted);margin-bottom:0}.evidence .note{color:#aeb8cb}
+    section{padding:38px 0;border-top:1px solid var(--line)}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:30px}.number{color:var(--coral);font-size:13px;font-weight:750;letter-spacing:.08em}.grid p{color:var(--muted);margin-bottom:0}
+    .score{background:var(--navy);color:#fff;border-radius:10px;overflow:hidden;display:grid;grid-template-columns:repeat(4,1fr)}.factor{padding:25px 20px;border-right:1px solid #ffffff28;position:relative}.factor:last-child{border:0}.factor strong{display:block;font-size:18px}.factor span{font-size:13px;color:#b7c1d4}.factor em{display:block;color:#ff8179;font-size:25px;font-style:normal;font-weight:750;margin-top:9px}.method{color:var(--muted);margin:19px 0 0}.method strong{color:var(--ink)}
+    .gates{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:24px}.gate{background:#fff;border:1px solid var(--line);padding:20px;border-radius:8px}.gate b{display:block;color:var(--coral);font-size:13px;margin-bottom:8px}.gate p{margin:0;color:var(--muted);font-size:14px}
+    .result-layout{display:grid;grid-template-columns:1.05fr 1fr;gap:42px;align-items:start}.distribution{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.bucket{background:#fff;padding:20px;border-top:4px solid var(--line)}.bucket.cull{border-color:var(--coral)}.bucket.watch{border-color:#e3a13b}.bucket.keep{border-color:#2b9a77}.bucket strong{display:block;font-size:33px;line-height:1.2}.bucket span{font-size:13px;color:var(--muted)}.impact{background:#fff;border:1px solid var(--line);padding:22px}.bar{margin:0 0 16px}.bar:last-child{margin-bottom:0}.bar-label{display:flex;justify-content:space-between;font-size:14px;margin-bottom:5px}.track{height:8px;background:#eceef2;border-radius:99px;overflow:hidden}.fill{height:100%;background:var(--coral);border-radius:99px;min-width:4px}
+    .delivery{display:grid;grid-template-columns:1fr 1fr;gap:40px}.delivery ol{padding-left:21px;margin:0}.delivery li{padding-bottom:8px}.scope{background:#fff;padding:24px;border-left:3px solid var(--amber)}.scope p{margin:0 0 12px}.scope p:last-child{margin:0}.links{display:flex;flex-wrap:wrap;gap:22px;margin-top:20px;font-size:14px}footer{padding-top:25px;padding-bottom:35px;color:var(--muted);font-size:13px;border-top:1px solid var(--line)}
+    @media(max-width:780px){header{align-items:flex-start}header,main,footer{padding-left:20px;padding-right:20px}.hero{grid-template-columns:1fr;gap:30px;padding:39px 0}.grid,.delivery,.result-layout{grid-template-columns:1fr;gap:25px}.score{grid-template-columns:1fr 1fr}.factor:nth-child(2){border-right:0}.factor{border-bottom:1px solid #ffffff28}.gates{grid-template-columns:1fr}.secondary{margin-left:12px}nav{gap:12px}.evidence{padding:21px}.distribution{grid-template-columns:1fr 1fr 1fr}.bucket{padding:16px 12px}}
+    @media(max-width:480px){.distribution{grid-template-columns:1fr}.score{grid-template-columns:1fr}.factor{border-right:0}.secondary{display:block;margin:13px 0 0}}
+  </style>
+</head>
+<body>
+  <header><div class="brand"><i></i>数据分析 · 项目案例</div><nav aria-label="主要导航"><a href="#framework">决策模型</a><a href="#results">分析结果</a><a href="#scope">数据边界</a><a href="dashboard.html">交互看板</a></nav></header>
+  <main>
+    <div class="hero">
+      <div>
+        <p class="eyebrow">PROYA · MEITUAN INSTANT RETAIL</p>
+        <h1>珀莱雅官旗<br>商品汰换决策分析</h1>
+        <p class="lead">针对官旗即时零售自产自销试点中运营成本偏高、SKU效率难判断的问题，将门店×SKU经营数据转化为同品类风险评分、候选清单与门店贡献下钻，支持商品精简和库存处置排序。</p>
+        <a class="button" href="dashboard.html">打开交互看板 →</a><a class="secondary" href="#scope">先看数据说明</a>
+        <p class="role">独立负责业务梳理、指标设计、模型规则与分析验证<br>HTML 前端由本人借助 AI 从 0 到 1 开发</p>
+      </div>
+      <aside class="evidence" aria-label="真实样本分析结果">
+        <h2>真实样本分析结果</h2>
+        <div class="evidence-row"><span>有效门店×SKU记录</span><strong>4,211</strong></div>
+        <div class="evidence-row"><span>覆盖门店 / SKU</span><strong>142 / 122</strong></div>
+        <div class="evidence-row"><span>汰换候选</span><strong>12</strong></div>
+        <div class="evidence-row"><span>候选库存金额</span><strong>¥1.82万</strong></div>
+        <p class="note">以上为看板在项目样本上的分析输出，不代表库存已处置或资金已经释放。</p>
+      </aside>
+    </div>
+
+    <section aria-labelledby="questions">
+      <h2 id="questions">围绕三个商品经营决策展开</h2>
+      <div class="grid">
+        <article><span class="number">01 / 同类比较</span><h3>哪些SKU是真正低效？</h3><p>不直接跨品类比较绝对销量，而是在同品类基准内同时观察毛利率、销售额、销量和库存占用。</p></article>
+        <article><span class="number">02 / 原因拆解</span><h3>高风险由什么驱动？</h3><p>把综合指数拆成毛利、贡献、动销和库存四类风险分，避免“只看销量”或“只看毛利率”的单指标误判。</p></article>
+        <article><span class="number">03 / 门店行动</span><h3>库存和销量分布在哪里？</h3><p>下钻到有实际销量的门店，同时将零销量但持有库存的门店纳入库存汇总，支持调拨、清理与保留判断。</p></article>
+      </div>
+    </section>
+
+    <section id="framework">
+      <h2>用同品类风险指数建立排序</h2>
+      <div class="score" aria-label="汰换指数由四项加权风险组成">
+        <div class="factor"><strong>低毛利率风险</strong><span>高值越差 · 同类Min-Max反向</span><em>35%</em></div>
+        <div class="factor"><strong>低销售额风险</strong><span>高值越差 · 同类Min-Max反向</span><em>25%</em></div>
+        <div class="factor"><strong>低销量风险</strong><span>高值越差 · 同类Min-Max反向</span><em>25%</em></div>
+        <div class="factor"><strong>高库存风险</strong><span>高值越差 · 同类Min-Max正向</span><em>15%</em></div>
+      </div>
+      <p class="method"><strong>汰换指数 = Σ（标准化风险 × 权重）× 100。</strong>指数用于风险排序，不单独决定下架；最终判定还需通过业务门槛和保护规则。</p>
+      <div class="gates">
+        <div class="gate"><b>第一道 · 可比性</b><p>按品类建立评分分布；同类不足3个SKU时使用全局分布辅助算分，但不直接给出汰换结论。</p></div>
+        <div class="gate"><b>第二道 · 双低门槛</b><p>只有销量、毛利率同时低于同类中位数，且指数≥70，才进入汰换候选；50—69进入观察。</p></div>
+        <div class="gate"><b>第三道 · 业务保护</b><p>新品、小样本、未分类商品，以及销售额或毛利额达到同类中位的SKU，自动降级为观察或保留。</p></div>
+      </div>
+      <p class="note">Min-Max会受极端值影响，因此模型用中位数门槛与贡献保护二次校验；结果是决策辅助，不是因果预测或自动下架指令。</p>
+    </section>
+
+    <section id="results">
+      <h2>把122个SKU分成可执行优先级</h2>
+      <div class="result-layout">
+        <div class="distribution" aria-label="商品判定分布">
+          <div class="bucket cull"><strong>12</strong><span>汰换候选 · 9.8%</span></div>
+          <div class="bucket watch"><strong>57</strong><span>引流 / 观察</span></div>
+          <div class="bucket keep"><strong>53</strong><span>建议保留</span></div>
+        </div>
+        <div class="impact" aria-label="候选商品经营占比">
+          <div class="bar"><div class="bar-label"><span>SKU数量占比</span><b>9.8%</b></div><div class="track"><div class="fill" style="width:9.8%"></div></div></div>
+          <div class="bar"><div class="bar-label"><span>销售额贡献</span><b>2.8%</b></div><div class="track"><div class="fill" style="width:2.8%"></div></div></div>
+          <div class="bar"><div class="bar-label"><span>毛利额贡献</span><b>1.7%</b></div><div class="track"><div class="fill" style="width:1.7%"></div></div></div>
+          <div class="bar"><div class="bar-label"><span>库存金额占比</span><b>4.1%</b></div><div class="track"><div class="fill" style="width:4.1%"></div></div></div>
+        </div>
+      </div>
+      <p class="method">候选SKU对销售额与毛利额贡献较低，但仍占用约1.82万元库存。该结论用于确定复核与处置顺序，实际动作还需结合替代品、活动排期、套装关系和供应链约束。</p>
+    </section>
+
+    <section>
+      <div class="delivery">
+        <div><h2>从原始数据到经营动作</h2><ol><li>统一商品编码，按门店×SKU聚合销量、销售额、毛利额、库存量与库存金额。</li><li>以同品类分布计算风险指数，结合中位数、样本量及贡献保护形成三档判定。</li><li>通过销量×毛利率气泡定位和风险拆解解释候选原因。</li><li>下钻门店销量及库存分布，并导出Excel候选清单用于业务复核。</li></ol></div>
+        <div><h2>作品展示的能力</h2><p>业务问题结构化、指标口径设计、Min-Max标准化、加权评分、稳健门槛、数据质量覆盖率、交互可视化，以及从模型输出到业务动作的转译。</p><p class="note">模型权重支持实时调整；动销率仅在有效库存量记录覆盖率达到80%时作为正式指标，否则明确标注“仅供参考”。</p></div>
+      </div>
+    </section>
+
+    <section id="scope">
+      <h2>数据来源与展示边界</h2>
+      <div class="scope">
+        <p><strong>真实项目与公开演示分开。</strong>项目样本原表5,747行，经看板字段校验后纳入4,211条有效门店×SKU记录；源Excel与真实商品明细不进入公开仓库。</p>
+        <p>公开看板默认加载<strong>20个模拟SKU、4家模拟门店</strong>，仅用于体验筛选、打分、门店下钻与导出流程，不能反推真实经营结果。</p>
+        <p>业务背景来自项目材料：官旗即时零售采用自产自销试点，需在增长与投入成本之间平衡。美团公开资料显示，品牌通提供经营沙盘、商品供给决策与商品管理能力，可作为行业背景，不能据此推断本项目接入了相同系统。</p>
+        <p>汰换指数是相对排序工具；对新品、套装、战略品、活动品及小样本品类，必须进行人工复核。</p>
+      </div>
+      <div class="links"><a href="dashboard.html">交互看板</a><a href="https://github.com/Charlie060302/proya-product-retirement-dashboard">项目代码</a><a href="https://github.com/Charlie060302/proya-product-retirement-dashboard/blob/main/docs/METHODOLOGY.md">指标口径与方法说明</a><a href="https://weibo.com/3176442143/R27cHrVI2">珀莱雅官旗渠道信息</a><a href="https://brandhub.meituan.com/">美团闪购·品牌通</a></div>
+    </section>
+  </main>
+  <footer>个人数据分析作品集 · 品牌名称仅用于说明项目背景，非珀莱雅或美团官方网站。</footer>
+</body>
+</html>
