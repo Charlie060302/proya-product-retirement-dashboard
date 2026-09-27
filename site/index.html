@@ -16,9 +16,10 @@
     section{padding:38px 0;border-top:1px solid var(--line)}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:30px}.number{color:var(--coral);font-size:13px;font-weight:750;letter-spacing:.08em}.grid p{color:var(--muted);margin-bottom:0}
     .score{background:var(--navy);color:#fff;border-radius:10px;overflow:hidden;display:grid;grid-template-columns:repeat(4,1fr)}.factor{padding:25px 20px;border-right:1px solid #ffffff28;position:relative}.factor:last-child{border:0}.factor strong{display:block;font-size:18px}.factor span{font-size:13px;color:#b7c1d4}.factor em{display:block;color:#ff8179;font-size:25px;font-style:normal;font-weight:750;margin-top:9px}.method{color:var(--muted);margin:19px 0 0}.method strong{color:var(--ink)}
     .gates{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:24px}.gate{background:#fff;border:1px solid var(--line);padding:20px;border-radius:8px}.gate b{display:block;color:var(--coral);font-size:13px;margin-bottom:8px}.gate p{margin:0;color:var(--muted);font-size:14px}
+    .pipeline{display:grid;grid-template-columns:repeat(5,1fr);gap:0;background:#fff;border:1px solid var(--line)}.stage{padding:21px 17px;border-right:1px solid var(--line);position:relative}.stage:last-child{border-right:0}.stage b{display:block;color:var(--coral);font-size:13px;margin-bottom:7px}.stage strong{display:block;font-size:16px;line-height:1.45;margin-bottom:7px}.stage p{margin:0;color:var(--muted);font-size:13px;line-height:1.65}.privacy-line{margin-top:17px;padding:14px 17px;background:#edf7f3;border-left:3px solid var(--green);color:#315d50;font-size:14px}
     .result-layout{display:grid;grid-template-columns:1.05fr 1fr;gap:42px;align-items:start}.distribution{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.bucket{background:#fff;padding:20px;border-top:4px solid var(--line)}.bucket.cull{border-color:var(--coral)}.bucket.watch{border-color:#e3a13b}.bucket.keep{border-color:#2b9a77}.bucket strong{display:block;font-size:33px;line-height:1.2}.bucket span{font-size:13px;color:var(--muted)}.impact{background:#fff;border:1px solid var(--line);padding:22px}.bar{margin:0 0 16px}.bar:last-child{margin-bottom:0}.bar-label{display:flex;justify-content:space-between;font-size:14px;margin-bottom:5px}.track{height:8px;background:#eceef2;border-radius:99px;overflow:hidden}.fill{height:100%;background:var(--coral);border-radius:99px;min-width:4px}
     .delivery{display:grid;grid-template-columns:1fr 1fr;gap:40px}.delivery ol{padding-left:21px;margin:0}.delivery li{padding-bottom:8px}.scope{background:#fff;padding:24px;border-left:3px solid var(--amber)}.scope p{margin:0 0 12px}.scope p:last-child{margin:0}.links{display:flex;flex-wrap:wrap;gap:22px;margin-top:20px;font-size:14px}footer{padding-top:25px;padding-bottom:35px;color:var(--muted);font-size:13px;border-top:1px solid var(--line)}
-    @media(max-width:780px){header{align-items:flex-start}header,main,footer{padding-left:20px;padding-right:20px}.hero{grid-template-columns:1fr;gap:30px;padding:39px 0}.grid,.delivery,.result-layout{grid-template-columns:1fr;gap:25px}.score{grid-template-columns:1fr 1fr}.factor:nth-child(2){border-right:0}.factor{border-bottom:1px solid #ffffff28}.gates{grid-template-columns:1fr}.secondary{margin-left:12px}nav{gap:12px}.evidence{padding:21px}.distribution{grid-template-columns:1fr 1fr 1fr}.bucket{padding:16px 12px}}
+    @media(max-width:780px){header{align-items:flex-start}header,main,footer{padding-left:20px;padding-right:20px}.hero{grid-template-columns:1fr;gap:30px;padding:39px 0}.grid,.delivery,.result-layout{grid-template-columns:1fr;gap:25px}.score{grid-template-columns:1fr 1fr}.factor:nth-child(2){border-right:0}.factor{border-bottom:1px solid #ffffff28}.gates{grid-template-columns:1fr}.pipeline{grid-template-columns:1fr}.stage{border-right:0;border-bottom:1px solid var(--line)}.stage:last-child{border-bottom:0}.secondary{margin-left:12px}nav{gap:12px}.evidence{padding:21px}.distribution{grid-template-columns:1fr 1fr 1fr}.bucket{padding:16px 12px}}
     @media(max-width:480px){.distribution{grid-template-columns:1fr}.score{grid-template-columns:1fr}.factor{border-right:0}.secondary{display:block;margin:13px 0 0}}
   </style>
 </head>
@@ -29,17 +30,17 @@
       <div>
         <p class="eyebrow">PROYA · MEITUAN INSTANT RETAIL</p>
         <h1>珀莱雅官旗<br>商品汰换决策分析</h1>
-        <p class="lead">针对官旗即时零售自产自销试点中运营成本偏高、SKU效率难判断的问题，将门店×SKU经营数据转化为同品类风险评分、候选清单与门店贡献下钻，支持商品精简和库存处置排序。</p>
+        <p class="lead">针对官旗即时零售自产自销试点中运营成本偏高、SKU效率难判断的问题，先用可复用数据清洗Skill建立门店×SKU标准底表，再转化为同品类风险评分、候选清单与门店贡献下钻。</p>
         <a class="button" href="dashboard.html">打开交互看板 →</a><a class="secondary" href="#scope">先看数据说明</a>
-        <p class="role">独立负责业务梳理、指标设计、模型规则与分析验证<br>HTML 前端由本人借助 AI 从 0 到 1 开发</p>
+        <p class="role">独立负责数据清洗Skill、指标设计、模型规则与分析验证<br>HTML 前端由本人借助 AI 从 0 到 1 开发</p>
       </div>
-      <aside class="evidence" aria-label="真实样本分析结果">
-        <h2>真实样本分析结果</h2>
+      <aside class="evidence" aria-label="离线脱敏分析摘要">
+        <h2>离线脱敏分析摘要</h2>
         <div class="evidence-row"><span>有效门店×SKU记录</span><strong>4,211</strong></div>
         <div class="evidence-row"><span>覆盖门店 / SKU</span><strong>142 / 122</strong></div>
         <div class="evidence-row"><span>汰换候选</span><strong>12</strong></div>
         <div class="evidence-row"><span>候选库存金额</span><strong>¥1.82万</strong></div>
-        <p class="note">以上为看板在项目样本上的分析输出，不代表库存已处置或资金已经释放。</p>
+        <p class="note">仅展示不可还原到单个商品或门店的汇总结果；原始Excel、真实SKU与门店明细均不公开。</p>
       </aside>
     </div>
 
@@ -50,6 +51,18 @@
         <article><span class="number">02 / 原因拆解</span><h3>高风险由什么驱动？</h3><p>把综合指数拆成毛利、贡献、动销和库存四类风险分，避免“只看销量”或“只看毛利率”的单指标误判。</p></article>
         <article><span class="number">03 / 门店行动</span><h3>库存和销量分布在哪里？</h3><p>下钻到有实际销量的门店，同时将零销量但持有库存的门店纳入库存汇总，支持调拨、清理与保留判断。</p></article>
       </div>
+    </section>
+
+    <section id="cleaning">
+      <h2>先用数据清洗Skill建立可信底表</h2>
+      <div class="pipeline" aria-label="商品汰换数据清洗流程">
+        <div class="stage"><b>01 / 识别输入</b><strong>五类业务数据</strong><p>自动识别基表、近期订单、门店城市映射、门店库存与期间销售汇总。</p></div>
+        <div class="stage"><b>02 / 统一主键</b><strong>门店名称 + SKU</strong><p>标准化门店名称，SKU始终按文本处理；输出保留订单源中的原始门店名。</p></div>
+        <div class="stage"><b>03 / 匹配计算</b><strong>城市、库存与销售</strong><p>库存只接受唯一匹配；冲突保持空值并报告。销售多行求和，毛利率重新计算。</p></div>
+        <div class="stage"><b>04 / 业务清洗</b><strong>品类补齐与可选剔除</strong><p>按SKU众数、同名商品依次补齐品类；仅在明确提供清单时删除指定SKU。</p></div>
+        <div class="stage"><b>05 / 质量验收</b><strong>新文件交付</strong><p>检查残留SKU、空品类、隐藏行、筛选范围与公式错误，不覆盖任何源文件。</p></div>
+      </div>
+      <div class="privacy-line"><strong>公开边界：</strong>Skill只在本地处理用户指定的只读源文件；GitHub仅发布代码、方法文档和模拟数据，不发布任何历史上传Excel。</div>
     </section>
 
     <section id="framework">
@@ -89,7 +102,7 @@
 
     <section>
       <div class="delivery">
-        <div><h2>从原始数据到经营动作</h2><ol><li>统一商品编码，按门店×SKU聚合销量、销售额、毛利额、库存量与库存金额。</li><li>以同品类分布计算风险指数，结合中位数、样本量及贡献保护形成三档判定。</li><li>通过销量×毛利率气泡定位和风险拆解解释候选原因。</li><li>下钻门店销量及库存分布，并导出Excel候选清单用于业务复核。</li></ol></div>
+        <div><h2>从源表到经营动作</h2><ol><li>用清洗Skill自动识别五类输入，并生成门店×SKU标准工作簿。</li><li>完成城市映射、库存唯一匹配、销售聚合、品类补齐与公式校验。</li><li>以同品类分布计算风险指数，结合中位数和保护规则形成三档判定。</li><li>通过气泡定位、原因拆解和门店下钻解释候选，并导出业务复核清单。</li></ol></div>
         <div><h2>作品展示的能力</h2><p>业务问题结构化、指标口径设计、Min-Max标准化、加权评分、稳健门槛、数据质量覆盖率、交互可视化，以及从模型输出到业务动作的转译。</p><p class="note">模型权重支持实时调整；动销率仅在有效库存量记录覆盖率达到80%时作为正式指标，否则明确标注“仅供参考”。</p></div>
       </div>
     </section>
@@ -97,8 +110,9 @@
     <section id="scope">
       <h2>数据来源与展示边界</h2>
       <div class="scope">
-        <p><strong>真实项目与公开演示分开。</strong>项目样本原表5,747行，经看板字段校验后纳入4,211条有效门店×SKU记录；源Excel与真实商品明细不进入公开仓库。</p>
-        <p>公开看板默认加载<strong>20个模拟SKU、4家模拟门店</strong>，仅用于体验筛选、打分、门店下钻与导出流程，不能反推真实经营结果。</p>
+        <p><strong>离线项目与公开演示严格隔离。</strong>Excel源文件始终只读，清洗结果输出为新文件；任何历史上传Excel、真实商品编码、真实门店名称和逐行经营明细均不进入GitHub。</p>
+        <p>公开看板默认加载<strong>20个模拟SKU、4家“示例门店”</strong>，商品编码统一以DEMO开头，仅用于体验筛选、打分、门店下钻与导出流程，不能反推真实经营结果。</p>
+        <p>页面中的4,211条记录、142家门店、122个SKU及候选结果仅为离线分析的脱敏汇总，不包含可还原实体的明细或标识符。</p>
         <p>业务背景来自项目材料：官旗即时零售采用自产自销试点，需在增长与投入成本之间平衡。美团公开资料显示，品牌通提供经营沙盘、商品供给决策与商品管理能力，可作为行业背景，不能据此推断本项目接入了相同系统。</p>
         <p>汰换指数是相对排序工具；对新品、套装、战略品、活动品及小样本品类，必须进行人工复核。</p>
       </div>
