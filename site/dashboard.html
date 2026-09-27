@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>珀莱雅官旗商品汰换决策看板｜数据分析作品集 Demo</title>
+<meta name="description" content="商品汰换决策分析作品集演示。基于模拟数据展示同品类评分、库存诊断和门店销量下钻。">
+<meta property="og:title" content="珀莱雅官旗商品汰换决策看板｜作品集 Demo">
+<meta property="og:description" content="基于模拟数据展示商品汰换评分、库存诊断和门店销量下钻。">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22><rect width=%2264%22 height=%2264%22 rx=%2214%22 fill=%22%23161d2e%22/><path d=%22M15 44V31h8v13zm13 0V20h8v24zm13 0V12h8v32z%22 fill=%22%23378add%22/></svg>">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{
+  --bg:#0f1420; --panel:#161d2e; --panel2:#1d2740; --line:#2a3550;
+  --txt:#e6ebf5; --txt2:#9aa7c2; --txt3:#6b7899;
+  --red:#e24b4a; --redbg:#2a1b22; --amber:#ef9f27; --amberbg:#2a2317;
+  --green:#1d9e75; --greenbg:#16281f; --blue:#378add; --bluebg:#16233a;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{max-width:100%;overflow-x:hidden}
+body{background:var(--bg);color:var(--txt);font-family:"Microsoft YaHei","Segoe UI",system-ui,sans-serif;font-size:14px;line-height:1.6;padding:24px}
+.wrap{max-width:1180px;margin:0 auto}
+.portfolio-bar{max-width:1180px;margin:0 auto 14px;display:flex;justify-content:space-between;align-items:center;gap:16px;color:var(--txt2);font-size:13px}
+.portfolio-bar a{color:#7db7f0;text-decoration:none}.portfolio-bar a:hover{text-decoration:underline}.demo-badge{padding:4px 9px;border:1px solid #5d4926;border-radius:999px;color:#f5b85d;background:#211d16}
+h1{font-size:22px;font-weight:600;margin-bottom:4px}
+.sub{color:var(--txt2);font-size:13px;margin-bottom:20px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px;margin-bottom:18px}
+.panel h2{font-size:16px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.hidden{display:none!important}
+.muted{color:var(--txt2);font-size:13px}
+.tag{font-size:12px;padding:2px 9px;border-radius:6px;font-weight:400}
+.tag-red{background:var(--redbg);color:var(--red)}
+.tag-amber{background:var(--amberbg);color:var(--amber)}
+.tag-green{background:var(--greenbg);color:var(--green)}
+.tag-blue{background:var(--bluebg);color:var(--blue)}
+/* drop zone */
+#drop{border:2px dashed var(--line);border-radius:12px;padding:38px 20px;text-align:center;cursor:pointer;transition:.15s;background:var(--panel2)}
+#drop:hover,#drop.over{border-color:var(--blue);background:var(--bluebg)}
+#drop .big{font-size:15px;color:var(--txt);margin-bottom:6px}
+#drop .small{font-size:12px;color:var(--txt3)}
+.btn{background:var(--panel2);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:8px 16px;font-size:13px;cursor:pointer;font-family:inherit}
+.btn:hover{border-color:var(--blue)}
+.btn-primary{background:var(--blue);border-color:var(--blue);color:#fff}
+.btn-primary:hover{opacity:.9}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+select,input[type=text]{background:var(--panel2);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:7px 10px;font-size:13px;font-family:inherit;color-scheme:dark;outline:none;transition:border-color .15s,box-shadow .15s,background .15s}
+select:hover,input[type=text]:hover{border-color:#3b4b70;background:#202c48}
+select:focus,input[type=text]:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(55,138,221,.16);background:#202c48}
+select option{background:var(--panel2);color:var(--txt)}
+input[type=text]::placeholder{color:var(--txt3)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--line)}
+th{color:var(--txt2);font-weight:500;font-size:12px}
+tbody tr:hover{background:var(--panel2)}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.card{background:var(--panel2);border-radius:10px;padding:14px 16px}
+.card .lab{color:var(--txt2);font-size:12px}
+.card .val{font-size:26px;font-weight:600;margin-top:4px}
+.card .note{font-size:11px;color:var(--txt3);line-height:1.4;margin-top:6px;min-height:15px}
+.card .note.warn{color:var(--amber)}
+.card .note.ok{color:var(--green)}
+.map-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px 20px}
+.map-item{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.map-item label{font-size:13px;color:var(--txt2);flex:0 0 auto}
+.map-item select{flex:1;min-width:0}
+.req{color:var(--red)}
+.wt-item{display:flex;align-items:center;gap:12px;margin-bottom:10px}
+.wt-item label{flex:0 0 170px;font-size:13px}
+.wt-item input[type=range]{flex:1}
+.wt-item .wv{flex:0 0 44px;text-align:right;color:var(--blue);font-variant-numeric:tabular-nums}
+.legend{display:flex;gap:18px;flex-wrap:wrap;font-size:12px;color:var(--txt2);margin-bottom:10px}
+.legend span{display:flex;align-items:center;gap:5px}
+.dot{width:10px;height:10px;border-radius:50%}
+.act-col{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.act-box{background:var(--panel2);border-radius:10px;padding:14px}
+.act-box h3{font-size:13px;font-weight:600;margin-bottom:8px}
+.act-box ul{list-style:none;font-size:13px;color:var(--txt)}
+.act-box li{padding:5px 0;border-bottom:1px solid var(--line);color:var(--txt2)}
+.act-box li:last-child{border:0}
+.fitem{display:flex;align-items:center;gap:8px}
+.fitem label{font-size:13px;color:var(--txt2)}
+.fitem select{min-width:140px}
+.product-filter{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.product-filter label{color:var(--txt2);font-size:13px;white-space:nowrap}
+.product-filter .product-input{flex:1;min-width:260px;max-width:620px;padding:9px 12px}
+  .scope-text{margin-left:auto;color:var(--txt2);font-size:12px}
+  #tbl{width:100%;min-width:1272px;table-layout:fixed}
+.list-head{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+.list-head h2{margin-bottom:0}
+.list-tools{display:flex;align-items:center;gap:8px;flex:1 1 100%;width:100%;flex-wrap:wrap}
+.list-search{width:210px;padding:8px 10px}
+.list-product{width:190px;padding:8px 10px}
+.list-category{width:150px;padding:8px 10px}
+.btn-export{margin-left:auto;background:#143429;border-color:#286d57;color:#62d6ae;font-weight:600;white-space:nowrap}
+.btn-export:hover{background:#184334;border-color:#45a582;color:#8ce8c8}
+.btn-fullscreen{background:#182746;border-color:#38527d;color:#8bc5f7;font-weight:600;white-space:nowrap}
+.btn-fullscreen:hover{background:#1d3558;border-color:var(--blue);color:#c2e2ff}
+.candidate-panel{width:min(1760px,calc(100vw - 28px));margin-left:50%;transform:translateX(-50%)}
+.table-scroll{overflow:auto;max-width:100%;position:relative;border-radius:8px}
+#tbl > thead > tr > th{position:sticky;top:0;z-index:6;background:#182136;box-shadow:0 1px 0 var(--line)}
+#tbl > tbody > tr:not(.store-detail-row) > td:nth-child(1),
+#tbl > thead > tr > th:nth-child(1){position:sticky;left:0;z-index:7;background:var(--panel)}
+#tbl > tbody > tr:not(.store-detail-row) > td:nth-child(2),
+#tbl > thead > tr > th:nth-child(2){position:sticky;left:40px;z-index:7;background:var(--panel)}
+#tbl > tbody > tr:not(.store-detail-row) > td:nth-child(3),
+#tbl > thead > tr > th:nth-child(3){position:sticky;left:260px;z-index:7;background:var(--panel);box-shadow:6px 0 10px rgba(6,12,24,.3)}
+#tbl > thead > tr > th:nth-child(-n+3){z-index:9;background:#182136}
+#tbl > tbody > tr:not(.store-detail-row):hover > td:nth-child(-n+3){background:var(--panel2)}
+#tbl td,#tbl th{padding-left:6px;padding-right:6px;vertical-align:middle;overflow-wrap:anywhere}
+#tbl .code-cell{overflow-wrap:normal;word-break:normal;font-size:12px}
+#tbl .reason-cell{min-width:0;max-width:none;white-space:normal;line-height:1.45}
+.candidate-panel:fullscreen,
+.candidate-panel.fullscreen-fallback{width:100vw;height:100vh;max-width:none;margin:0;transform:none;border:0;border-radius:0;padding:18px;overflow:auto;background:var(--panel)}
+.candidate-panel:fullscreen .table-scroll,
+.candidate-panel.fullscreen-fallback .table-scroll{max-height:calc(100vh - 138px);overflow:auto}
+.candidate-panel.fullscreen-fallback{position:fixed;inset:0;z-index:1000}
+body.list-fullscreen-lock{overflow:hidden}
+.code-cell{white-space:nowrap;color:var(--txt2);font-variant-numeric:tabular-nums}
+.detail-btn{border:1px solid #38527d;background:#182746;color:#73b7f4;border-radius:7px;padding:5px 9px;cursor:pointer;white-space:nowrap;font-family:inherit;font-size:12px}
+.detail-btn:hover,.detail-btn.open{border-color:var(--blue);background:#1d3558;color:#a9d6ff}
+.store-detail-row:hover{background:transparent}
+.store-detail-row td{padding:0 10px 14px;background:#111827}
+.store-detail-wrap{border:1px solid #30405f;border-radius:10px;background:#121b2d;padding:14px 16px}
+.store-detail-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.store-detail-title{font-weight:600;color:var(--txt)}
+.store-detail-summary{color:var(--txt2);font-size:12px}
+.store-detail-table{min-width:840px;font-size:12px}
+.store-detail-table th,.store-detail-table td{padding:7px 9px;background:transparent}
+.store-bar{display:flex;align-items:center;gap:8px;min-width:150px}
+.bar-track{height:7px;flex:1;background:#26334e;border-radius:5px;overflow:hidden}
+.bar-fill{height:100%;background:linear-gradient(90deg,#378add,#62d6ae);border-radius:5px}
+.share-text{width:46px;text-align:right;color:var(--txt2);font-variant-numeric:tabular-nums}
+.store-warning{color:var(--amber);font-size:12px}
+.reason-cell{min-width:230px;max-width:320px;color:var(--txt2);line-height:1.5}
+.seg{display:flex;gap:4px;padding:3px;border:1px solid var(--line);border-radius:9px;background:var(--bg)}
+.seg button{border:0;background:transparent;color:var(--txt2);padding:6px 10px;border-radius:6px;cursor:pointer;font-size:12px}
+.seg button.active{background:var(--panel2);color:var(--txt)}
+.seg button[data-zone=cull].active{background:var(--redbg);color:var(--red)}
+.seg button[data-zone=watch].active{background:var(--amberbg);color:var(--amber)}
+.seg button[data-zone=keep].active{background:var(--greenbg);color:var(--green)}
+.focus-note{display:inline-flex;align-items:center;gap:6px;color:var(--blue);font-size:12px}
+.focus-note::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--blue)}
+.foot{color:var(--txt3);font-size:12px;text-align:center;margin-top:24px}
+@media(max-width:780px){
+  body{padding:14px}.cards{grid-template-columns:repeat(2,1fr)}
+  .map-grid,.act-col{grid-template-columns:1fr}
+  .score-layout{grid-template-columns:1fr!important}
+  .panel{padding:15px}
+  .product-filter .product-input{min-width:100%;max-width:none}
+  .scope-text{margin-left:0;width:100%}
+  .candidate-panel{width:calc(100vw - 16px)}
+  .list-search,.list-product,.list-category,.btn-export,.btn-fullscreen{width:100%;margin-left:0}
+}
+::-webkit-scrollbar{height:8px;width:8px}
+::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px}
+</style>
+</head>
+<body>
+<div class="portfolio-bar"><a href="index.html">← 返回项目案例</a><span class="demo-badge">公开演示 · 默认加载模拟数据</span></div>
+<div class="wrap">
+<h1>商品汰换决策看板</h1>
+<div class="sub">数据分析作品集 Demo · 默认展示模拟数据 · 支持门店×SKU数据导入、汰换评分与门店下钻 · 导入数据仅在本地浏览器计算</div>
+<!-- 1. 导入区 -->
+<div class="panel" id="importPanel">
+  <h2>① 导入数据</h2>
+  <div id="drop">
+    <div class="big">拖拽 Excel / CSV 文件到这里，或点击选择</div>
+    <div class="small">支持 .xlsx / .xls / .csv &nbsp;·&nbsp; 第一行需为表头 &nbsp;·&nbsp; 推荐一行一个“门店 × SKU” &nbsp;·&nbsp; 无销量但有库存的记录也会纳入库存汇总</div>
+    <input type="file" id="file" class="hidden" accept=".xlsx,.xls,.csv">
+  </div>
+  <div class="row" style="margin-top:14px">
+    <button class="btn" id="pasteBtn">或粘贴表格数据</button>
+    <button class="btn" id="demoBtn">先用示例数据看效果</button>
+    <span class="muted" id="fileInfo"></span>
+  </div>
+  <div id="pasteWrap" class="hidden" style="margin-top:12px">
+    <textarea id="pasteArea" style="width:100%;height:120px;background:var(--panel2);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:10px;font-family:inherit;font-size:13px" placeholder="从 Excel 直接复制（含表头），粘贴到这里，然后点下方解析"></textarea>
+    <button class="btn btn-primary" id="pasteParse" style="margin-top:10px">解析粘贴内容</button>
+  </div>
+</div>
+
+<!-- 2. 字段映射区 -->
+<div class="panel hidden" id="mapPanel">
+  <h2>② 字段映射 <span class="muted" style="font-weight:400">已自动匹配，可手动调整 · <span class="req">带*为必需</span></span></h2>
+  <div class="map-grid" id="mapGrid"></div>
+  <div class="row" style="margin-top:16px">
+    <button class="btn btn-primary" id="runBtn">生成汰换分析 →</button>
+    <span class="muted" id="mapMsg"></span>
+  </div>
+</div>
+
+<!-- 3. 看板区 -->
+<div id="dashboard" class="hidden">
+  <!-- 品类筛选：仅改变展示范围，评分始终使用全量同品类商品 -->
+  <div class="panel product-filter" id="scopeFilterBar">
+    <label for="categoryFilterInput">商品品类</label>
+    <input type="text" class="product-input" id="categoryFilterInput" list="categoryOptions" placeholder="输入或选择细分品类" autocomplete="off">
+    <datalist id="categoryOptions"></datalist>
+    <button class="btn" id="clearScopeFilter">查看全部</button>
+    <span class="scope-text" id="scopeInfo">当前范围：全部品类</span>
+  </div>
+
+  <!-- 指标卡 -->
+  <div class="panel">
+    <h2>③ 概览</h2>
+    <div class="cards" id="kpiCards"></div>
+  </div>
+
+  <!-- 权重 + 原版销量/毛利率气泡图 -->
+  <div class="panel">
+    <h2>④ 定位与打分设置</h2>
+    <div class="score-layout" style="display:grid;grid-template-columns:320px 1fr;gap:24px;align-items:start">
+      <div>
+        <div class="muted" style="margin-bottom:10px">汰换指数权重（拖动实时重算，合计100）</div>
+        <div id="weights"></div>
+        <div class="muted" id="wSum" style="margin-top:6px"></div>
+        <div class="muted" style="margin-top:10px;line-height:1.7">
+          自动汰换需同时满足：销量、毛利率均低于同品类基准，且指数≥70。销量或毛利率存在单项短板且指数≥50时进入观察；
+          极低动销（近30天≤2件，或不高于同类中位数的25%）即使毛利率较高也进入观察。
+          销售额或毛利额达到同品类中位、品类样本不足或属于“其他/未分类”时，最多进入观察。
+        </div>
+      </div>
+      <div>
+        <div class="legend">
+          <span><span class="dot" style="background:var(--red)"></span>汰换候选</span>
+          <span><span class="dot" style="background:var(--amber)"></span>引流/观察</span>
+          <span><span class="dot" style="background:var(--green)"></span>明星/潜力</span>
+        </div>
+        <div style="position:relative;width:100%;height:360px">
+          <canvas id="quad" role="img" aria-label="销量与毛利率气泡图">销量与毛利率定位图</canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 汰换清单 -->
+  <div class="panel candidate-panel" id="candidatePanel">
+    <div class="list-head">
+      <h2>⑤ 汰换候选清单 <span class="muted" style="font-weight:400" id="listInfo"></span></h2>
+      <div class="list-tools">
+        <input type="text" class="list-search" id="listSearch" placeholder="搜索商品名称（模糊）" aria-label="按商品名称模糊搜索" autocomplete="off">
+        <select class="list-product" id="listProductFilter" aria-label="按商品名称精确筛选">
+          <option value="all">全部商品</option>
+        </select>
+        <select class="list-category" id="listCategoryFilter" aria-label="按品类筛选">
+          <option value="all">全部品类</option>
+        </select>
+        <div class="seg" id="zoneFilter">
+          <button class="active" data-zone="all">全部</button>
+          <button data-zone="watch">引流/观察</button>
+          <button data-zone="keep">保留</button>
+          <button data-zone="cull">汰换候选</button>
+        </div>
+        <button class="btn btn-fullscreen" id="fullscreenListBtn" type="button" title="切换候选清单全屏显示">
+          全屏查看
+        </button>
+        <button class="btn btn-export" id="exportExcelBtn" type="button" title="导出当前筛选结果">
+          一键导出 Excel
+        </button>
+      </div>
+    </div>
+    <div class="table-scroll" id="candidateTableScroll">
+      <table id="tbl">
+        <colgroup>
+          <col style="width:40px"><col style="width:220px"><col style="width:160px"><col style="width:72px">
+          <col style="width:54px"><col style="width:62px"><col style="width:70px"><col style="width:72px">
+          <col style="width:58px"><col style="width:72px"><col style="width:82px"><col style="width:58px">
+          <col style="width:180px"><col style="width:72px">
+        </colgroup>
+        <thead><tr>
+          <th>#</th><th>商品</th><th>商品编码</th><th>品类</th><th class="num">销量</th><th class="num">毛利率</th>
+          <th class="num">毛利额</th><th class="num">销售额</th><th class="num">库存量</th><th class="num">库存金额</th><th>门店销量</th>
+          <th class="num">汰换指数</th><th>判定依据</th><th>判定</th>
+        </tr></thead>
+        <tbody id="tblBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 行动建议 -->
+  <div class="panel">
+    <h2>⑥ 所以呢？行动建议</h2>
+    <div class="act-col">
+      <div class="act-box"><h3><span class="tag tag-red">立即执行</span></h3><ul id="actNow"></ul></div>
+      <div class="act-box"><h3><span class="tag tag-amber">观察/谈判</span></h3><ul id="actWatch"></ul></div>
+      <div class="act-box"><h3><span class="tag tag-green">保留/优化</span></h3><ul id="actKeep"></ul></div>
+    </div>
+  </div>
+</div>
+
+<div class="foot">数据在本地浏览器计算，不上传服务器 · 汰换指数为分析参考，重大决策请结合业务判断</div>
+<script>
+const F = [
+  {key:'store', label:'门店名称', req:true,  syn:['门店名称','门店','店铺','店名','store','分店','店铺名称','门店名']},
+  {key:'name',  label:'商品名称', req:true,  syn:['商品名称','品名','名称','商品','产品名称']},
+  {key:'code',  label:'商品编码', req:false, syn:['商品编码','SKU编码','SKU','货号','产品编码','商品ID','条码']},
+  {key:'isnew', label:'是否新品', req:false, syn:['是否新品','新品','是否新','new']},
+  {key:'cat',   label:'品类',     req:false, syn:['品类','分类','商品分类','类目','类别','category']},
+  {key:'qty',   label:'销量',     req:true,  syn:['销售件数','销量','件数','数量','销售数量','销售量']},
+  {key:'rate',  label:'毛利率',   req:false, syn:['商品毛利率','毛利率','毛利率%','gpm','毛利比']},
+  {key:'profit',label:'毛利额',   req:false, syn:['商品毛利','毛利','毛利额','商品线上毛利','利润']},
+  {key:'mkfee', label:'营销费用', req:false, syn:['商品营销费用','营销费用','推广费用','营销费','推广费']},
+  {key:'rev',   label:'销售额',   req:false, syn:['商品收入','销售额','收入','gmv','营业额','销售金额']},
+  {key:'price', label:'售价',     req:false, syn:['商品售价','售价','单价','价格','price']},
+  {key:'stockv',label:'库存金额', req:false, syn:['库存金额','库存额','占用金额']},
+  {key:'stockq',label:'库存量',   req:false, syn:['库存量','库存数量','库存数','库存件数','在库数量','可用库存','现存量','期末库存','库存']},
+];
+// 表头候选：用于自动定位真实表头行（兼容前面有标题/口径说明行的文件）
+const HEADER_HINTS=['门店名称','商品名称','商品编码','销售件数','商品毛利','商品收入','品类','库存金额','库存量','库存数量','库存数','在库数量'];
+let RAW=[], HEADERS=[], MAP={}, DETAIL_ROWS=[], ROWS=[], chart=null;
+const W = {rate:35, rev:25, qty:25, stock:15};
+const WL = {rate:'毛利（毛利率低）',rev:'贡献（同品类销售额占比低）',qty:'动销（销量低）',stock:'库存（占用高）'};
+const THRESHOLD = {watch:50, cull:70};
+const MIN_CAT_SAMPLE = 3;
+const UNCERTAIN_CATS = new Set(['其他','其它','未分类','其他/未分类']);
+const RISK_NAME = {rate:'毛利',rev:'贡献',qty:'动销',stock:'库存'};
+
+const $=id=>document.getElementById(id);
+const norm=s=>String(s||'').toLowerCase().replace(/[\s()（）%＊*_\-\/]/g,'');
+const UNASSIGNED_STORE='（未识别门店）';
+// 自动映射：精确匹配优先，其次"表头包含同义词"且同义词越长越优先，避免"商品毛利"抢占"商品毛利率"
+function autoMap(){
+  MAP={};
+  const used=new Set();
+  // 按同义词最大长度降序处理字段，让"商品毛利率"这类长词先锁定列，防止被"商品毛利"抢
+  const order=[...F].sort((a,b)=>Math.max(...b.syn.map(s=>norm(s).length))-Math.max(...a.syn.map(s=>norm(s).length)));
+  order.forEach(f=>{
+    let best=-1,bestScore=-1;
+    HEADERS.forEach((h,i)=>{
+      if(used.has(i))return;
+      const nh=norm(h);
+      f.syn.forEach(s=>{
+        const ns=norm(s);
+        let sc=-1;
+        if(nh===ns)sc=1000+ns.length;                 // 完全相等最高
+        else if(nh.startsWith(ns))sc=500+ns.length;   // 表头以同义词开头（"商品毛利率"以"商品毛利"开头不行，但"商品毛利率"=="商品毛利率"已在上面命中）
+        else if(nh.includes(ns))sc=100+ns.length;     // 表头包含同义词
+        if(sc>bestScore){bestScore=sc;best=i;}
+      });
+    });
+    if(best>=0){MAP[f.key]=best;used.add(best);}
+  });
+}
+
+function readFile(file){
+  const fr=new FileReader();
+  fr.onload=e=>{
+    try{
+      const wb=XLSX.read(e.target.result,{type:'array'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const arr=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+      loadArray(arr);
+      $('fileInfo').textContent='已读取：'+file.name+'（'+(arr.length-1)+' 行）';
+    }catch(err){alert('解析失败：'+err.message);}
+  };
+  fr.readAsArrayBuffer(file);
+}
+
+function parsePaste(txt){
+  const lines=txt.trim().split(/\r?\n/).filter(l=>l.trim());
+  const arr=lines.map(l=>l.split('\t').length>1?l.split('\t'):l.split(/,|，/));
+  loadArray(arr);
+  $('fileInfo').textContent='已解析粘贴内容（'+(arr.length-1)+' 行）';
+}
+
+// 自动定位表头行：从前往后找第一个"含足够多字段关键词"的行（兼容前面有标题/口径说明行的真实导出文件）
+function findHeaderRow(arr){
+  let best=-1,bestHit=0;
+  const maxScan=Math.min(arr.length,10);
+  for(let i=0;i<maxScan;i++){
+    const row=arr[i].map(c=>norm(c));
+    let hit=0;
+    HEADER_HINTS.forEach(h=>{if(row.some(c=>c&&c===norm(h)||c.includes(norm(h))))hit++;});
+    if(hit>bestHit){bestHit=hit;best=i;}
+    if(hit>=3)break; // 命中3个以上字段词，基本就是表头行
+  }
+  return bestHit>=2?best:0;
+}
+
+function loadArray(arr){
+  if(!arr||arr.length<2){alert('数据不足，至少需要表头+1行');return;}
+  const hr=findHeaderRow(arr);
+  HEADERS=arr[hr].map(h=>String(h).trim());
+  RAW=arr.slice(hr+1).filter(r=>r.some(c=>String(c).trim()!==''));
+  autoMap();
+  renderMap();
+  $('mapPanel').classList.remove('hidden');
+  if(hr>0)$('fileInfo').textContent=`已识别表头在第${hr+1}行（跳过上方${hr}行说明）`;
+  $('mapPanel').scrollIntoView({behavior:'smooth'});
+}
+
+function renderMap(){
+  $('mapGrid').innerHTML=F.map(f=>{
+    const opts=['<option value="-1">（无 / 不使用）</option>']
+      .concat(HEADERS.map((h,i)=>`<option value="${i}" ${MAP[f.key]===i?'selected':''}>${h}</option>`)).join('');
+    return `<div class="map-item"><label>${f.label}${f.req?' <span class="req">*</span>':''}</label>
+      <select data-k="${f.key}">${opts}</select></div>`;
+  }).join('');
+  $('mapGrid').querySelectorAll('select').forEach(s=>{
+    s.onchange=()=>{const v=+s.value; if(v<0)delete MAP[s.dataset.k]; else MAP[s.dataset.k]=v;};
+  });
+}
+const CATRULE=[
+  ['面霜',/面霜|霜\b|cream/i],['精华',/精华|安瓶|essence|serum/i],['眼霜',/眼霜|眼部/i],
+  ['水乳',/水乳|爽肤水|化妆水|乳液|柔肤水/i],['面膜',/面膜|膜布|mask/i],['隔离防晒',/隔离|防晒|妆前|防护/i],
+  ['彩妆',/气垫|粉底|睫毛|口红|唇|眉|眼影|腮红|遮瑕|散粉|定妆|彩妆/i],['洁面',/洁面|洗面|卸妆/i],
+  ['精华油',/精华油|美容油/i],['套装',/套装|礼盒|组合|套盒/i]
+];
+function guessCat(name){
+  for(const [c,re] of CATRULE){if(re.test(name))return c;}
+  return '其他';
+}
+function num(v){const n=parseFloat(String(v).replace(/[^\d.\-]/g,''));return isNaN(n)?null:n;}
+
+function sumKnown(arr,key,knownKey){
+  const vals=arr
+    .filter(x=>knownKey?x[knownKey]:x[key]!=null)
+    .map(x=>x[key])
+    .filter(x=>Number.isFinite(x));
+  return vals.length?vals.reduce((s,v)=>s+v,0):null;
+}
+function fallbackRate(arr){
+  const weighted=arr.filter(x=>x.rate!=null&&x.rev!=null&&x.rev!==0);
+  const weight=weighted.reduce((s,x)=>s+Math.abs(x.rev),0);
+  if(weight>0)return weighted.reduce((s,x)=>s+x.rate*Math.abs(x.rev),0)/weight;
+  const rates=arr.map(x=>x.rate).filter(x=>x!=null&&Number.isFinite(x));
+  return rates.length?median(rates):null;
+}
+function aggregateStores(details,totalQty){
+  const groups=new Map();
+  details.forEach(d=>{
+    const store=d.store||UNASSIGNED_STORE;
+    if(!groups.has(store))groups.set(store,[]);
+    groups.get(store).push(d);
+  });
+  return [...groups.entries()].map(([store,arr])=>{
+    const qty=sumKnown(arr,'qty')||0;
+    const profit=sumKnown(arr,'profit');
+    const rev=sumKnown(arr,'rev');
+    const stockq=sumKnown(arr,'stockq');
+    const stockv=sumKnown(arr,'stockv','stockvKnown');
+    const rate=profit!=null&&rev?profit/rev:fallbackRate(arr);
+    const sellThrough=stockq!=null&&qty+stockq>0?qty/(qty+stockq):null;
+    return {
+      store,qty,profit,rev,rate,stockq,stockv,
+      stockvKnown:stockv!=null,
+      share:totalQty?qty/totalQty:null,
+      sellThrough
+    };
+  }).sort((a,b)=>b.qty-a.qty||a.store.localeCompare(b.store,'zh-CN'));
+}
+
+function build(){
+  const g=(r,k)=>MAP[k]!=null?r[MAP[k]]:undefined;
+  DETAIL_ROWS=RAW.map((r,idx)=>{
+    const store=String(g(r,'store')??'').trim()||UNASSIGNED_STORE;
+    const name=String(g(r,'name')??'').trim();
+    const code=(MAP.code!=null?String(g(r,'code')??'').trim():'')||'-';
+    let qty=num(g(r,'qty'));
+    const rateRaw=g(r,'rate');
+    let rate=num(rateRaw);
+    let profit=num(g(r,'profit'));
+    let rev=num(g(r,'rev'));
+    let price=num(g(r,'price'));
+    let stockv=num(g(r,'stockv'));
+    let stockq=num(g(r,'stockq'));
+    let mkfee=num(g(r,'mkfee'));
+    // 是否新品：D列非空(是/Y/新品等)即视为新品
+    const isnewRaw=MAP.isnew!=null?String(g(r,'isnew')??'').trim():'';
+    const isnew=/是|y|yes|新|1|true/i.test(isnewRaw);
+    // 品类：空 / '-' / '—' 视为缺失，回退到商品名猜测
+    let catRaw=(MAP.cat!=null?String(g(r,'cat')??'').trim():'');
+    let cat=(catRaw&&catRaw!=='-'&&catRaw!=='—')?catRaw.split(/[,，、]/)[0].trim():guessCat(name);
+    // 补算：毛利率优先直接给；否则 毛利额/销售额
+    // 百分比兼容：Excel 百分比通常是 0.588 / -1.16；粘贴文本可能是 58.8% / -116%
+    if(rate!=null&&String(rateRaw??'').includes('%'))rate=rate/100;
+    else if(rate!=null&&rate>1&&rate<=1000)rate=rate/100;
+    else if(rate!=null&&rate<=-2&&rate>=-1000)rate=rate/100;
+    if(rate==null&&profit!=null&&rev)rate=profit/rev;
+    if(rev==null&&price!=null&&qty!=null)rev=price*qty;
+    if(stockv==null&&stockq!=null&&price!=null)stockv=stockq*price;
+    return {
+      idx,store,name,code,cat,isnew,qty,rate,profit,mkfee:mkfee||0,rev,price,
+      stockq,stockv:stockv||0,stockvKnown:stockv!=null
+    };
+  // 库存是时点指标，不能因为销售件数为空而丢弃该门店×SKU记录。
+  // 销量为空在汇总时按 0 处理；只要任一核心经营指标有值，该行就进入商品与门店汇总。
+  }).filter(x=>x.name&&(
+    x.qty!=null||x.profit!=null||x.rev!=null||x.stockq!=null||x.stockvKnown
+  ));
+
+  const bySku=new Map();
+  DETAIL_ROWS.forEach(d=>{
+    const key=d.code&&d.code!=='-'?`code:${d.code}`:`name:${d.name}|cat:${d.cat}`;
+    if(!bySku.has(key))bySku.set(key,[]);
+    bySku.get(key).push(d);
+  });
+  ROWS=[...bySku.entries()].map(([groupKey,details],idx)=>{
+    const first=details[0];
+    const qty=sumKnown(details,'qty')||0;
+    const profit=sumKnown(details,'profit');
+    const rev=sumKnown(details,'rev');
+    const stockq=sumKnown(details,'stockq');
+    const stockv=sumKnown(details,'stockv','stockvKnown');
+    const mkfee=sumKnown(details,'mkfee')||0;
+    const rate=profit!=null&&rev?profit/rev:fallbackRate(details);
+    const price=rev!=null&&qty?rev/qty:sumKnown(details,'price')/Math.max(1,details.filter(x=>x.price!=null).length);
+    // 库存汇总覆盖全部门店；“门店销量”仅统计销量大于 0 的门店。
+    const allStoreDetails=aggregateStores(details,qty);
+    const storeDetails=allStoreDetails.filter(d=>d.qty>0);
+    const inventoryStoreCount=allStoreDetails.filter(d=>
+      (d.stockq!=null&&d.stockq>0)||(d.stockvKnown&&d.stockv>0)
+    ).length;
+    const inventoryOnlyStoreCount=allStoreDetails.filter(d=>
+      d.qty<=0&&((d.stockq!=null&&d.stockq>0)||(d.stockvKnown&&d.stockv>0))
+    ).length;
+    const categoryMismatch=new Set(details.map(x=>x.cat)).size>1;
+    const nameMismatch=new Set(details.map(x=>x.name)).size>1;
+    return {
+      idx,uid:`sku-${idx}`,groupKey,
+      name:first.name,code:first.code,cat:first.cat,isnew:details.some(x=>x.isnew),
+      qty,rate,profit,mkfee,rev,price,stockq,
+      stockv:stockv||0,stockvKnown:stockv!=null,
+      sourceDetails:details,
+      storeDetails,storeCount:storeDetails.length,
+      inventoryStoreCount,inventoryOnlyStoreCount,
+      dataWarning:categoryMismatch||nameMismatch?'同一商品编码存在名称或品类不一致':''
+    };
+  });
+  return ROWS.length>0;
+}
+// 品类筛选只改变看板展示，不改变全量同品类评分基准
+let FOCUS_CATEGORY='__all';
+let LIST_ZONE='all';
+let LIST_SEARCH='';
+let LIST_PRODUCT='all';
+let LIST_CATEGORY='all';
+let OPEN_STORE_DETAIL=null;
+function focusedRows(){
+  return FOCUS_CATEGORY==='__all'?ROWS:ROWS.filter(r=>r.cat===FOCUS_CATEGORY);
+}
+
+// 同品类标准化：值越"差"→分越高。DATA=当前筛选范围内的数据
+function score(DATA){
+  const byCat={};
+  DATA.forEach(r=>{(byCat[r.cat]=byCat[r.cat]||[]).push(r);});
+  const stat=(arr,f)=>{const v=arr.map(f).filter(x=>x!=null&&!isNaN(x));
+    if(!v.length)return null;const mn=Math.min(...v),mx=Math.max(...v);return {mn,mx,rng:mx-mn||1};};
+  // normalize helper: high=bad
+  const nz=(val,st,invert)=>{if(val==null||!st)return 0.5;let t=(val-st.mn)/st.rng;return invert?1-t:t;};
+  // 范围内全局分布：小样本品类用它兜底标准化
+  const gRateS=stat(DATA,r=>r.rate),gRevS=stat(DATA,r=>r.rev),gQtyS=stat(DATA,r=>r.qty),gStkS=stat(DATA,r=>r.stockv);
+  Object.values(byCat).forEach(arr=>{
+    const small=arr.length<3;
+    const sRate=small?gRateS:stat(arr,r=>r.rate), sRev=small?gRevS:stat(arr,r=>r.rev),
+          sQty=small?gQtyS:stat(arr,r=>r.qty), sStk=small?gStkS:stat(arr,r=>r.stockv);
+    const medRate=median(arr.map(x=>x.rate).filter(x=>x!=null));
+    const medQty=median(arr.map(x=>x.qty).filter(x=>x!=null));
+    const medRev=median(arr.map(x=>x.rev).filter(x=>x!=null));
+    const medProfit=median(arr.map(x=>x.profit).filter(x=>x!=null));
+    arr.forEach(r=>{
+      const sc={
+        rate: nz(r.rate,sRate,true),   // 毛利率低→差→高分（invert）
+        rev:  nz(r.rev,sRev,true),     // 销售额低→差
+        qty:  nz(r.qty,sQty,true),     // 销量低→差
+        stock:nz(r.stockv,sStk,false)  // 库存金额高→差
+      };
+      const tot=W.rate+W.rev+W.qty+W.stock;
+      r.sc=sc;
+      r.index=tot>0
+        ? Math.round((sc.rate*W.rate+sc.rev*W.rev+sc.qty*W.qty+sc.stock*W.stock)/tot*100)
+        : 50;
+      r.riskPoints=Object.fromEntries(Object.keys(sc).map(k=>[
+        k,tot>0?Math.round(sc[k]*W[k]/tot*100):0
+      ]));
+      r.topRisk=Object.entries(r.riskPoints)
+        .sort((a,b)=>b[1]-a[1]).slice(0,2)
+        .map(([k,v])=>`${RISK_NAME[k]}${v}分`).join('、');
+      // 象限判定（同类中位）
+      r.medRate=medRate;
+      r.medQty=medQty;
+      r.medRev=medRev;
+      r.medProfit=medProfit;
+    });
+  });
+  // 范围内全局中位（品类样本过少时兜底，避免"单SKU品类=自己就是中位"永远判不出低）
+  const gRate=median(DATA.map(x=>x.rate).filter(x=>x!=null));
+  const gQty=median(DATA.map(x=>x.qty).filter(x=>x!=null));
+  const gRev=median(DATA.map(x=>x.rev).filter(x=>x!=null));
+  const gProfit=median(DATA.map(x=>x.profit).filter(x=>x!=null));
+  // 分类：销量与毛利率是对称的一级信号；单项短板进入观察，双项短板再用70分线筛选汰换
+  DATA.forEach(r=>{
+    r.capped=false;
+    const catSize=(byCat[r.cat]||[]).length;
+    const small=catSize<MIN_CAT_SAMPLE;      // 同类样本不足时，用全局中位参与算分，但不直接下汰换结论
+    const uncertainCat=small||UNCERTAIN_CATS.has(r.cat);
+    const refRate=small?gRate:r.medRate;
+    const refQty=small?gQty:r.medQty;
+    const refRev=small?gRev:r.medRev;
+    const refProfit=small?gProfit:r.medProfit;
+    const lowRate=r.rate!=null && r.rate<refRate;
+    const lowQty=r.qty<refQty;
+    const extremeLowQty=lowQty&&r.qty<=Math.max(2,refQty*0.25);
+    const strongRev=r.rev!=null&&refRev!=null&&r.rev>=refRev;
+    const strongProfit=r.profit!=null&&refProfit!=null&&r.profit>=refProfit;
+    // 销售额或毛利额达到同类中位时，视为仍有贡献，最多观察，不直接自动汰换
+    const contributionProtected=strongRev||strongProfit;
+    r.refRate=refRate;
+    r.refQty=refQty;
+    r.refRev=refRev;
+    r.refProfit=refProfit;
+    r.extremeLowQty=extremeLowQty;
+    r.contributionProtected=contributionProtected;
+    if(r.isnew){
+      r.zone='newbie';
+      r.reason='新品培育期豁免';
+    }else if(lowRate&&lowQty&&r.index>=THRESHOLD.cull&&!uncertainCat&&!contributionProtected){
+      r.zone='cull';
+      r.reason=`销量 ${fmtInt(r.qty)}＜同类中位 ${fmtInt(refQty)}；毛利率 ${fmtPct(r.rate)}＜${fmtPct(refRate)}；指数 ${r.index}≥${THRESHOLD.cull}；主要拖累：${r.topRisk}`;
+    }else if((lowRate||lowQty)&&(r.index>=THRESHOLD.watch||extremeLowQty)){
+      r.zone='watch';
+      if(lowQty&&r.index>=THRESHOLD.cull&&uncertainCat){
+        r.reason=UNCERTAIN_CATS.has(r.cat)
+          ? `品类为“${r.cat}”，商品不可直接横比；指数 ${r.index}，暂列观察`
+          : `同品类仅 ${catSize} 个SKU，基准不足；指数 ${r.index}，暂列观察`;
+      }else if(lowQty&&r.index>=THRESHOLD.cull&&contributionProtected){
+        const protectedBy=[strongRev?'销售额':'',strongProfit?'毛利额':''].filter(Boolean).join('和');
+        r.reason=`${protectedBy}达到同类中位，保留贡献保护；指数 ${r.index}，降为观察`;
+      }else if(lowQty){
+        if(lowRate){
+          r.reason=`销量和毛利率均低于同类，但指数 ${r.index}＜${THRESHOLD.cull}，转观察`;
+        }else if(extremeLowQty){
+          r.reason=`销量 ${fmtInt(r.qty)} 处于极低动销（同类中位 ${fmtInt(refQty)}）；毛利率不低，仍需观察需求`;
+        }else{
+          r.reason=`销量 ${fmtInt(r.qty)}＜同类中位 ${fmtInt(refQty)}；毛利率不低；指数≥${THRESHOLD.watch}`;
+        }
+      }else{
+        r.reason=`毛利率 ${fmtPct(r.rate)}＜同类中位 ${fmtPct(refRate)}；销量不低；指数≥${THRESHOLD.watch}`;
+      }
+    }else{
+      r.zone='keep';
+      r.reason=r.index<THRESHOLD.watch
+        ? `指数 ${r.index}＜观察线 ${THRESHOLD.watch}`
+        : `毛利率和销量均未落入单项风险区`;
+    }
+  });
+  // 汰换品数量上限：按汰换指数降序，仅保留指数最高的前 MAXCULL 个为候选，超出的降级为观察
+  const MAXCULL=100;
+  const culls=DATA.filter(r=>r.zone==='cull').sort((a,b)=>b.index-a.index);
+  if(culls.length>MAXCULL){
+    culls.slice(MAXCULL).forEach(r=>{r.zone='watch';r.capped=true;r.reason='超出汰换候选Top 100，转为观察';});
+  }
+}
+function median(a){if(!a.length)return 0;const s=[...a].sort((x,y)=>x-y);const m=Math.floor(s.length/2);return s.length%2?s[m]:(s[m-1]+s[m])/2;}
+const fmtInt=n=>n==null?'-':Math.round(n).toLocaleString();
+const fmtPct=n=>n==null?'-':(n*100).toFixed(1)+'%';
+const fmtMoney=n=>{if(n==null)return '-';const a=Math.abs(n);
+  if(a>=10000)return '¥'+(n/10000).toFixed(1)+'w';return '¥'+Math.round(n).toLocaleString();};
+
+function renderKPI(DATA){
+  const cull=DATA.filter(r=>r.zone==='cull');
+  const watch=DATA.filter(r=>r.zone==='watch');
+  const newbie=DATA.filter(r=>r.zone==='newbie');
+  const stockSum=cull.reduce((s,r)=>s+(r.stockv||0),0);
+  // 动销率不再要求全部SKU库存量100%完整。按有效“门店×SKU”记录计算，
+  // 缺失、非数字或负库存记录同时从分子和分母排除，避免把缺失库存误当成0而虚高结果。
+  const SELL_THROUGH_MIN_COVERAGE=0.8;
+  const sellThroughRows=DATA.flatMap(r=>Array.isArray(r.sourceDetails)?r.sourceDetails:[]);
+  const validSellThroughRows=sellThroughRows.filter(d=>
+    Number.isFinite(d.qty)&&d.qty>=0&&Number.isFinite(d.stockq)&&d.stockq>=0
+  );
+  const coverage=sellThroughRows.length
+    ? validSellThroughRows.length/sellThroughRows.length
+    : 0;
+  const qtySum=validSellThroughRows.reduce((s,d)=>s+d.qty,0);
+  const stockQtySum=validSellThroughRows.reduce((s,d)=>s+d.stockq,0);
+  const sellThroughBase=qtySum+stockQtySum;
+  const sellThrough=sellThroughBase>0?qtySum/sellThroughBase:null;
+  let sellThroughValue='未映射';
+  let sellThroughColor='var(--amber)';
+  let sellThroughNote='请在字段映射中选择“库存量”列';
+  let sellThroughNoteClass='warn';
+  let sellThroughTitle='动销率需要销量和库存量；库存金额不能替代库存量。';
+  if(!DATA.length){
+    sellThroughValue='暂无数据';
+    sellThroughNote='请先导入数据或调整筛选条件';
+  }else if(validSellThroughRows.length>0&&sellThroughBase===0){
+    sellThroughValue='无基数';
+    sellThroughNote=`有效记录 ${validSellThroughRows.length}/${sellThroughRows.length}，销量与库存量合计均为0`;
+    sellThroughTitle='有效记录的销量与库存量合计为0，动销率没有可计算的分母。';
+  }else if(sellThrough!=null){
+    sellThroughValue=fmtPct(sellThrough);
+    const coverageText=`覆盖 ${validSellThroughRows.length}/${sellThroughRows.length} 条记录（${fmtPct(coverage)}）`;
+    if(coverage>=SELL_THROUGH_MIN_COVERAGE){
+      sellThroughColor='var(--blue)';
+      sellThroughNote=`${coverageText} · 口径可用`;
+      sellThroughNoteClass='ok';
+    }else{
+      sellThroughNote=`${coverageText} · 低于80%，仅供参考`;
+    }
+    sellThroughTitle='口径：有效门店×SKU记录的销量总和 ÷（销量总和 + 库存量总和）。缺失、非数字或负库存记录同时从分子和分母排除；覆盖率低于80%时标记为仅供参考。';
+  }
+  const cards=[
+    ['范围内SKU数',DATA.length,'','当前品类筛选范围内的商品行数','',''],
+    ['动销率',sellThroughValue,sellThroughColor,sellThroughTitle,sellThroughNote,sellThroughNoteClass],
+    ['汰换候选',cull.length,'var(--red)','按 V4 原有决策模型判定为汰换候选的商品数','',''],
+    ['候选占用库存',fmtMoney(stockSum),'','汰换候选商品对应的库存金额合计','',''],
+    ['引流/观察',watch.length,'var(--amber)','按 V4 原有决策模型判定为引流/观察的商品数','',''],
+    ['新品（豁免）',newbie.length,'var(--blue)','处于新品培育期、暂不参与自动汰换的商品数','','']
+  ];
+  $('kpiCards').innerHTML=cards.map(c=>
+    `<div class="card" title="${c[3]}"><div class="lab">${c[0]}</div><div class="val" ${c[2]?`style="color:${c[2]}"`:''}>${c[1]}</div>${c[4]?`<div class="note ${c[5]||''}">${c[4]}</div>`:''}</div>`).join('');
+}
+
+function renderChart(){
+  const DATA=focusedRows();
+  const col={
+    cull:['rgba(226,75,74,.62)','#A32D2D'],
+    watch:['rgba(239,159,39,.62)','#854F0B'],
+    keep:['rgba(29,158,117,.58)','#0F6E56'],
+    newbie:['rgba(91,141,239,.62)','#2b50c8']
+  };
+  const point=r=>({
+    x:r.qty,y:+(r.rate*100).toFixed(1),
+    r:Math.max(5,Math.min(20,(r.rev||0)/2000+5)),
+    name:r.name,cat:r.cat,isnew:r.isnew,index:r.index,zone:r.zone
+  });
+  const ds=['cull','watch','keep','newbie'].map(z=>({
+    label:z,
+    data:DATA.filter(r=>r.zone===z&&r.rate!=null).map(point),
+    backgroundColor:col[z][0],
+    borderColor:col[z][1],borderWidth:1
+  }));
+  if(chart)chart.destroy();
+  chart=new Chart($('quad'),{type:'bubble',data:{datasets:ds},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.raw.name}${c.raw.isnew?'[新]':''}｜${c.raw.cat}｜销量${c.raw.x}｜毛利率${c.raw.y}%｜指数${c.raw.index}`}}},
+      scales:{
+        x:{title:{display:true,text:'近30天销量（件）→',color:'#9aa7c2'},ticks:{color:'#9aa7c2'},grid:{color:'rgba(255,255,255,.06)'}},
+        y:{title:{display:true,text:'毛利率（%）→',color:'#9aa7c2'},ticks:{color:'#9aa7c2'},grid:{color:'rgba(255,255,255,.06)'}}
+      }}});
+}
+
+const zoneTag={cull:['汰换候选','tag-red'],watch:['引流/观察','tag-amber'],keep:['保留','tag-green'],newbie:['新品·豁免','tag-blue']};
+function setFilterOptions(id,allLabel,values,selected){
+  const el=$(id);
+  el.replaceChildren(new Option(allLabel,'all'));
+  values.forEach(v=>el.add(new Option(v,v,false,v===selected)));
+}
+function renderListCategoryFilter(DATA){
+  const cats=[...new Set(DATA.map(r=>r.cat))].sort((a,b)=>a.localeCompare(b,'zh-CN'));
+  if(LIST_CATEGORY!=='all'&&!cats.includes(LIST_CATEGORY))LIST_CATEGORY='all';
+  setFilterOptions('listCategoryFilter','全部品类',cats,LIST_CATEGORY);
+}
+function renderListProductFilter(DATA){
+  const pool=DATA.filter(r=>LIST_CATEGORY==='all'||r.cat===LIST_CATEGORY);
+  const names=[...new Set(pool.map(r=>r.name))].sort((a,b)=>a.localeCompare(b,'zh-CN'));
+  if(LIST_PRODUCT!=='all'&&!names.includes(LIST_PRODUCT))LIST_PRODUCT='all';
+  setFilterOptions('listProductFilter','全部商品',names,LIST_PRODUCT);
+}
+function filteredTableRows(DATA){
+  const q=LIST_SEARCH.trim().toLowerCase();
+  return DATA.filter(r=>
+    (LIST_ZONE==='all'||r.zone===LIST_ZONE) &&
+    (LIST_CATEGORY==='all'||r.cat===LIST_CATEGORY) &&
+    (LIST_PRODUCT==='all'||r.name===LIST_PRODUCT) &&
+    (!q||r.name.toLowerCase().includes(q))
+  ).sort((a,b)=>b.index-a.index);
+}
+function renderStoreDetail(r){
+  const details=r.storeDetails||[];
+  if(!details.length){
+    return '<div class="store-detail-wrap"><span class="store-warning">没有可用的门店销量明细</span></div>';
+  }
+  const maxQty=Math.max(1,...details.map(x=>Math.max(0,x.qty)));
+  const top=details[0];
+  const body=details.map((d,i)=>{
+    const bar=Math.max(0,Math.min(100,d.qty/maxQty*100));
+    return `<tr>
+      <td>${i+1}</td>
+      <td>${d.store}</td>
+      <td class="num">${fmtInt(d.qty)}</td>
+      <td><div class="store-bar"><div class="bar-track"><div class="bar-fill" style="width:${bar.toFixed(1)}%"></div></div><span class="share-text">${fmtPct(d.share)}</span></div></td>
+      <td class="num">${fmtMoney(d.rev)}</td>
+      <td class="num">${fmtInt(d.stockq)}</td>
+      <td class="num">${fmtPct(d.sellThrough)}</td>
+    </tr>`;
+  }).join('');
+  return `<div class="store-detail-wrap">
+    <div class="store-detail-head">
+      <div>
+        <div class="store-detail-title">门店销量明细 · ${r.name}</div>
+        <div class="store-detail-summary">商品总销量 ${fmtInt(r.qty)} 件 · 实际销售 ${details.length} 家门店 · 销量按门店降序</div>
+      </div>
+      <div class="store-detail-summary">Top 1：${top.store}（${fmtInt(top.qty)}件，${fmtPct(top.share)}）</div>
+    </div>
+    ${r.inventoryOnlyStoreCount>0?`<div class="store-warning" style="margin-bottom:8px">库存口径：另有 ${r.inventoryOnlyStoreCount} 家门店无销量但有库存，已计入商品库存量和库存金额，不计入门店销量。</div>`:''}
+    ${r.dataWarning?`<div class="store-warning" style="margin-bottom:8px">数据提醒：${r.dataWarning}</div>`:''}
+    <div style="overflow-x:auto">
+      <table class="store-detail-table">
+        <thead><tr><th>#</th><th>门店</th><th class="num">销量</th><th>销量占比</th><th class="num">销售额</th><th class="num">库存量</th><th class="num">门店动销率</th></tr></thead>
+        <tbody>${body}</tbody>
+      </table>
+    </div>
+  </div>`;
+}
+function renderTable(DATA){
+  const sorted=filteredTableRows(DATA);
+  const cull=DATA.filter(r=>r.zone==='cull');
+  const cappedCount=DATA.filter(r=>r.capped).length;
+  const capNote=cappedCount>0?`（已按指数截取 Top 100，另有 ${cappedCount} 个降级为观察）`:'（按汰换指数降序）';
+  $('listInfo').textContent=`当前范围 ${DATA.length} 个SKU，汰换候选 ${cull.length} 个，显示 ${sorted.length} 个 ${capNote}`;
+  $('tblBody').innerHTML=sorted.map((r,i)=>{
+    const t=zoneTag[r.zone];
+    const isOpen=OPEN_STORE_DETAIL===r.uid;
+    return `<tr>
+      <td>${i+1}</td><td>${r.name}</td><td class="code-cell">${r.code}</td><td>${r.cat}</td>
+      <td class="num">${fmtInt(r.qty)}</td><td class="num">${fmtPct(r.rate)}</td>
+      <td class="num">${fmtMoney(r.profit)}</td><td class="num">${fmtMoney(r.rev)}</td>
+      <td class="num">${fmtInt(r.stockq)}</td><td class="num">${r.stockvKnown?fmtMoney(r.stockv):'-'}</td>
+      <td><button class="detail-btn ${isOpen?'open':''}" type="button" data-detail-id="${r.uid}">${isOpen?'收起明细':'查看销售门店'} · ${r.storeCount}家</button></td>
+      <td class="num" style="font-weight:600;color:${r.index>=THRESHOLD.cull?'var(--red)':r.index>=THRESHOLD.watch?'var(--amber)':'var(--txt2)'}">${r.index}</td>
+      <td class="reason-cell">${r.reason||'-'}</td>
+      <td><span class="tag ${t[1]}">${t[0]}</span></td></tr>
+      ${isOpen?`<tr class="store-detail-row"><td colspan="14">${renderStoreDetail(r)}</td></tr>`:''}`;
+  }).join('')||'<tr><td colspan="14" style="text-align:center;color:var(--txt3);padding:28px">没有符合当前筛选条件的商品</td></tr>';
+}
+
+function exportCurrentTable(){
+  if(typeof XLSX==='undefined'){
+    alert('Excel 导出组件未加载，请检查网络后刷新页面再试');
+    return;
+  }
+  const rows=filteredTableRows(focusedRows());
+  if(!rows.length){
+    alert('当前筛选条件下没有可导出的商品');
+    return;
+  }
+  const headers=[
+    '序号','商品','商品编码','品类','销量','毛利率','毛利额','销售额',
+    '库存量','库存金额','有销量门店数','汰换指数','判定依据','判定'
+  ];
+  const data=rows.map((r,i)=>[
+    i+1,r.name,String(r.code??''),r.cat,r.qty,r.rate,r.profit,r.rev,
+    r.stockq,r.stockvKnown?r.stockv:null,r.storeCount,r.index,r.reason||'',zoneTag[r.zone][0]
+  ]);
+  const ws=XLSX.utils.aoa_to_sheet([headers,...data]);
+  ws['!cols']=[
+    {wch:7},{wch:46},{wch:24},{wch:16},{wch:10},{wch:11},{wch:14},
+    {wch:14},{wch:11},{wch:14},{wch:12},{wch:12},{wch:58},{wch:14}
+  ];
+  ws['!autofilter']={ref:`A1:N${data.length+1}`};
+  for(let r=1;r<=data.length;r++){
+    const codeCell=ws[XLSX.utils.encode_cell({r,c:2})];
+    if(codeCell){codeCell.t='s';codeCell.z='@';}
+    const rateCell=ws[XLSX.utils.encode_cell({r,c:5})];
+    if(rateCell&&typeof rateCell.v==='number')rateCell.z='0.0%';
+    [6,7,9].forEach(c=>{
+      const cell=ws[XLSX.utils.encode_cell({r,c})];
+      if(cell&&typeof cell.v==='number')cell.z='¥#,##0.00';
+    });
+    [4,8,10,11].forEach(c=>{
+      const cell=ws[XLSX.utils.encode_cell({r,c})];
+      if(cell&&typeof cell.v==='number')cell.z='#,##0';
+    });
+  }
+  const detailHeaders=[
+    '商品','商品编码','品类','门店','门店销量','销量占比','门店销售额',
+    '门店毛利额','门店毛利率','门店库存量','门店库存金额','门店动销率','商品判定'
+  ];
+  const detailData=rows.flatMap(r=>(r.storeDetails||[]).map(d=>[
+    r.name,String(r.code??''),r.cat,d.store,d.qty,d.share,d.rev,d.profit,
+    d.rate,d.stockq,d.stockvKnown?d.stockv:null,d.sellThrough,zoneTag[r.zone][0]
+  ]));
+  const detailWs=XLSX.utils.aoa_to_sheet([detailHeaders,...detailData]);
+  detailWs['!cols']=[
+    {wch:46},{wch:24},{wch:16},{wch:28},{wch:11},{wch:11},{wch:15},
+    {wch:15},{wch:13},{wch:13},{wch:16},{wch:13},{wch:14}
+  ];
+  detailWs['!autofilter']={ref:`A1:M${detailData.length+1}`};
+  for(let r=1;r<=detailData.length;r++){
+    const codeCell=detailWs[XLSX.utils.encode_cell({r,c:1})];
+    if(codeCell){codeCell.t='s';codeCell.z='@';}
+    [5,8,11].forEach(c=>{
+      const cell=detailWs[XLSX.utils.encode_cell({r,c})];
+      if(cell&&typeof cell.v==='number')cell.z='0.0%';
+    });
+    [6,7,10].forEach(c=>{
+      const cell=detailWs[XLSX.utils.encode_cell({r,c})];
+      if(cell&&typeof cell.v==='number')cell.z='¥#,##0.00';
+    });
+    [4,9].forEach(c=>{
+      const cell=detailWs[XLSX.utils.encode_cell({r,c})];
+      if(cell&&typeof cell.v==='number')cell.z='#,##0';
+    });
+  }
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'汰换候选清单');
+  XLSX.utils.book_append_sheet(wb,detailWs,'门店销量明细');
+  wb.Props={
+    Title:'商品汰换候选清单',
+    Subject:'V4 看板当前筛选结果',
+    Author:'商品汰换决策看板'
+  };
+  const now=new Date();
+  const pad=n=>String(n).padStart(2,'0');
+  const stamp=`${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}`;
+  XLSX.writeFile(wb,`商品汰换候选清单_${stamp}.xlsx`,{compression:true});
+}
+
+function candidateFullscreenActive(){
+  const panel=$('candidatePanel');
+  return document.fullscreenElement===panel||panel.classList.contains('fullscreen-fallback');
+}
+function syncFullscreenButton(){
+  const active=candidateFullscreenActive();
+  $('fullscreenListBtn').textContent=active?'退出全屏':'全屏查看';
+  $('fullscreenListBtn').classList.toggle('active',active);
+}
+function useFullscreenFallback(active){
+  $('candidatePanel').classList.toggle('fullscreen-fallback',active);
+  document.body.classList.toggle('list-fullscreen-lock',active);
+  syncFullscreenButton();
+}
+async function toggleCandidateFullscreen(){
+  const panel=$('candidatePanel');
+  if(document.fullscreenElement===panel){
+    await document.exitFullscreen();
+    return;
+  }
+  if(panel.classList.contains('fullscreen-fallback')){
+    useFullscreenFallback(false);
+    return;
+  }
+  if(panel.requestFullscreen){
+    try{
+      await panel.requestFullscreen();
+      return;
+    }catch(err){
+      useFullscreenFallback(true);
+      return;
+    }
+  }
+  useFullscreenFallback(true);
+}
+
+function renderActions(DATA){
+  const sorted=[...DATA].sort((a,b)=>b.index-a.index);
+  const now=sorted.filter(r=>r.zone==='cull').slice(0,6);
+  const watch=sorted.filter(r=>r.zone==='watch').slice(0,6);
+  const keep=sorted.filter(r=>r.zone==='keep').sort((a,b)=>a.index-b.index).slice(0,6);
+  const li=(arr,tail)=>arr.length?arr.map(r=>`<li>${r.name}（${r.cat}·指数${r.index}）${tail}</li>`).join(''):'<li>暂无</li>';
+  $('actNow').innerHTML=li(now,' → 下架清库存');
+  $('actWatch').innerHTML=li(watch,' → 谈供货价/看连带');
+  $('actKeep').innerHTML=li(keep,' → 保留可扶持');
+}
+
+function renderWeights(){
+  $('weights').innerHTML=Object.keys(W).map(k=>
+    `<div class="wt-item"><label>${WL[k]}</label>
+     <input type="range" min="0" max="60" value="${W[k]}" data-k="${k}">
+     <span class="wv" id="wv-${k}">${W[k]}</span></div>`).join('');
+  $('weights').querySelectorAll('input').forEach(inp=>{
+    inp.oninput=()=>{W[inp.dataset.k]=+inp.value;$('wv-'+inp.dataset.k).textContent=inp.value;updateWSum();recompute();};
+  });
+  updateWSum();
+}
+function updateWSum(){const s=Object.values(W).reduce((a,b)=>a+b,0);$('wSum').textContent='合计权重：'+s+'（自动归一化） · 观察线 '+THRESHOLD.watch+' · 汰换线 '+THRESHOLD.cull;}
+
+function recompute(){
+  // 评分基准始终使用整份导入数据；品类筛选只改变展示范围
+  score(ROWS);
+  const DATA=focusedRows();
+  renderScope(DATA);
+  renderKPI(DATA);
+  renderChart();
+  renderListCategoryFilter(DATA);
+  renderListProductFilter(DATA);
+  renderTable(DATA);
+  renderActions(DATA);
+}
+
+function renderScope(DATA){
+  const el=$('scopeInfo');
+  if(!el)return;
+  const catText=FOCUS_CATEGORY==='__all'?'全部品类':FOCUS_CATEGORY;
+  const cull=DATA.filter(r=>r.zone==='cull').length;
+  const watch=DATA.filter(r=>r.zone==='watch').length;
+  el.innerHTML=DATA.length
+    ? `<span class="focus-note">当前范围：${catText} · ${DATA.length} 个SKU · 汰换候选${cull}个 · 引流/观察${watch}个</span> · 评分基准为全量同品类商品`
+    : `当前范围“${catText}”没有可分析商品`;
+}
+
+function renderScopeFilters(){
+  const cats=[...new Set(ROWS.map(r=>r.cat))].sort((a,b)=>a.localeCompare(b,'zh-CN'));
+  if(FOCUS_CATEGORY!=='__all'&&!cats.includes(FOCUS_CATEGORY))FOCUS_CATEGORY='__all';
+  $('categoryOptions').innerHTML=cats.map(v=>`<option value="${v}"></option>`).join('');
+  $('categoryFilterInput').value=FOCUS_CATEGORY==='__all'?'':FOCUS_CATEGORY;
+}
+
+function resetListFilters(){
+  LIST_SEARCH='';
+  LIST_ZONE='all';
+  LIST_PRODUCT='all';
+  LIST_CATEGORY='all';
+  OPEN_STORE_DETAIL=null;
+  $('listSearch').value='';
+  $('zoneFilter').querySelectorAll('button').forEach(b=>b.classList.toggle('active',b.dataset.zone==='all'));
+}
+
+function applyCategoryFilter(value){
+  const v=String(value||'').trim();
+  const available=ROWS;
+  if(!v){
+    FOCUS_CATEGORY='__all';
+  }else if(available.some(r=>r.cat===v)){
+    FOCUS_CATEGORY=v;
+  }else{
+    $('scopeInfo').textContent='请从可选列表中选择完整品类名称';
+    return;
+  }
+  resetListFilters();
+  recompute();
+}
+
+function run(){
+  const miss=F.filter(f=>f.req&&MAP[f.key]==null);
+  if(miss.length){$('mapMsg').innerHTML='<span class="req">请先映射必需字段：'+miss.map(m=>m.label).join('、')+'</span>';return;}
+  if(!build()){alert('没有解析出有效数据行，请检查字段映射');return;}
+  $('mapMsg').textContent='';
+  FOCUS_CATEGORY='__all';
+  LIST_ZONE='all';
+  LIST_SEARCH='';
+  LIST_PRODUCT='all';
+  LIST_CATEGORY='all';
+  OPEN_STORE_DETAIL=null;
+  renderScopeFilters();
+  $('listSearch').value='';
+  $('zoneFilter').querySelectorAll('button').forEach(b=>b.classList.toggle('active',b.dataset.zone==='all'));
+  renderWeights();
+  // 关键：先显示面板再渲染图表，否则 canvas 在 display:none 中初始化会量到0尺寸→图空白
+  $('dashboard').classList.remove('hidden');
+  recompute();
+  if(chart)chart.resize();   // 兜底：确保容器尺寸就绪后图表重算大小
+  $('dashboard').scrollIntoView({behavior:'smooth'});
+}
+// ---- 事件 ----
+const drop=$('drop'),file=$('file');
+drop.onclick=()=>file.click();
+file.onchange=e=>{if(e.target.files[0])readFile(e.target.files[0]);};
+['dragover','dragenter'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('over');}));
+['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('over');}));
+drop.addEventListener('drop',e=>{const f=e.dataTransfer.files[0];if(f)readFile(f);});
+$('runBtn').onclick=run;
+$('pasteBtn').onclick=()=>$('pasteWrap').classList.toggle('hidden');
+$('pasteParse').onclick=()=>{const t=$('pasteArea').value;if(t.trim())parsePaste(t);};
+$('categoryFilterInput').onchange=e=>applyCategoryFilter(e.target.value);
+$('categoryFilterInput').onkeydown=e=>{if(e.key==='Enter')applyCategoryFilter(e.target.value);};
+$('clearScopeFilter').onclick=()=>{
+  FOCUS_CATEGORY='__all';
+  resetListFilters();
+  renderScopeFilters();
+  recompute();
+};
+$('listSearch').oninput=e=>{
+  LIST_SEARCH=e.target.value;
+  renderTable(focusedRows());
+};
+$('listCategoryFilter').onchange=e=>{
+  LIST_CATEGORY=e.target.value;
+  renderListProductFilter(focusedRows());
+  renderTable(focusedRows());
+};
+$('listProductFilter').onchange=e=>{
+  LIST_PRODUCT=e.target.value;
+  renderTable(focusedRows());
+};
+$('zoneFilter').onclick=e=>{
+  const btn=e.target.closest('button[data-zone]');if(!btn)return;
+  LIST_ZONE=btn.dataset.zone;
+  $('zoneFilter').querySelectorAll('button').forEach(b=>b.classList.toggle('active',b===btn));
+  renderTable(focusedRows());
+};
+$('tblBody').onclick=e=>{
+  const btn=e.target.closest('button[data-detail-id]');
+  if(!btn)return;
+  OPEN_STORE_DETAIL=OPEN_STORE_DETAIL===btn.dataset.detailId?null:btn.dataset.detailId;
+  renderTable(focusedRows());
+};
+$('fullscreenListBtn').onclick=toggleCandidateFullscreen;
+$('exportExcelBtn').onclick=exportCurrentTable;
+document.addEventListener('fullscreenchange',syncFullscreenButton);
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&$('candidatePanel').classList.contains('fullscreen-fallback')){
+    useFullscreenFallback(false);
+  }
+});
+syncFullscreenButton();
+
+// ---- 示例数据（演示用，标注非真实）----
+$('demoBtn').onclick=()=>{
+  const demoBase=[
+    ['商品名称','品类','销售件数','商品毛利率','商品毛利','商品收入','库存金额'],
+    ['示意面霜甲','面霜',180,58.8,108000,183600,4200],
+    ['示意精华甲','精华',96,53.4,54000,101000,3100],
+    ['示意彩妆甲','彩妆',62,45.2,27800,61500,2600],
+    ['示意面霜乙','面霜',5,21.5,4300,20000,6800],
+    ['示意精华油','精华油',6,12.3,2300,18600,7400],
+    ['示意眼霜甲','眼霜',14,9.1,2800,30700,4400],
+    ['示意面霜丙','面霜',149,57.9,89000,153700,3800],
+    ['示意气垫甲','彩妆',95,38.6,41200,106800,3300],
+    ['示意隔离霜','隔离防晒',15,18.2,3100,17000,3100],
+    ['示意精华乙','精华',120,55.1,66000,119800,3600],
+    ['示意高光','彩妆',12,25.4,2600,10200,2800],
+    ['示意眼霜乙','眼霜',6,19.8,3200,16200,5200],
+    ['示意水乳套装','水乳',88,49.3,52600,106700,4100],
+    ['示意面膜甲','面膜',12,22.6,2600,11500,3900],
+    ['示意精华水','水乳',63,42.1,18700,44400,2200],
+    ['示意遮瑕','彩妆',70,52.8,24100,45600,1900],
+    ['示意面霜丁','面霜',96,59.1,58000,98100,3400],
+    ['示意精华丙','精华',48,52.9,27000,51000,2900],
+    ['示意面膜乙','面膜',9,20.1,1800,9000,4100],
+    ['示意气垫乙','彩妆',22,36.2,9500,26200,3300]
+  ];
+  const demoStores=['成都春熙路店','成都西站店','北京西站店','上海人民广场店'];
+  const shareSets=[
+    [0.46,0.27,0.17,0.10],
+    [0.38,0.34,0.18,0.10],
+    [0.55,0.23,0.14,0.08]
+  ];
+  const splitTotal=(total,shares)=>{
+    let remain=total;
+    return shares.map((share,i)=>{
+      if(i===shares.length-1)return remain;
+      const value=Math.round(total*share);
+      remain-=value;
+      return value;
+    });
+  };
+  const demo=[['门店名称','商品名称','商品编码','品类','销售件数','商品毛利率','商品毛利','商品收入','库存量','库存金额']];
+  demoBase.slice(1).forEach((r,i)=>{
+    const [name,cat,qty,rate,profit,rev,stockv]=r;
+    const stockq=Math.max(1,Math.round(stockv/180));
+    const code=`DEMO-${String(i+1).padStart(4,'0')}`;
+    const shares=shareSets[i%shareSets.length];
+    const qtyParts=splitTotal(qty,shares);
+    const profitParts=splitTotal(profit,shares);
+    const revParts=splitTotal(rev,shares);
+    const stockqParts=splitTotal(stockq,shares);
+    const stockvParts=splitTotal(stockv,shares);
+    demoStores.forEach((store,j)=>{
+      demo.push([
+        store,name,code,cat,qtyParts[j],rate,profitParts[j],revParts[j],
+        stockqParts[j],stockvParts[j]
+      ]);
+    });
+  });
+  loadArray(demo);
+  $('fileInfo').innerHTML='<span style="color:var(--amber)">已载入示例数据（非真实，仅演示）</span>';
+};
+$('demoBtn').click();
+run();
+</script>
+
+</div>
+</body>
+</html>
